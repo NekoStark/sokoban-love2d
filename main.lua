@@ -1,8 +1,11 @@
+Camera = require 'lib/camera'
+
 function love.load()
     getmetatable('').__index = function(str,i) return string.sub(str,i,i) end
+    love.window.setMode(800, 600, {resizable=false})
     love.graphics.setBackgroundColor(118, 140, 142)
 
-    example = love.graphics.newImage("graphics/box.png")
+    camera = Camera.new(0, 0)
 
     playerDown = love.graphics.newImage("graphics/player/player_down_2.png")
     playerUp = love.graphics.newImage("graphics/player/player_up_2.png")
@@ -27,24 +30,24 @@ function love.load()
           {'#', '#', '#', '#', '#', '#', '#', '#'},
       },
       {
-            {'#', '#', '#', '#', '#'},
-            {'#', ' ', ' ', ' ', '#'},
+            {'#', '#', '#', '#', '#', '#', '#', '#', '#'},
+            {'#', ' ', ' ', ' ', '#', '#', '#', '#', '#'},
             {'#', 'V', '$', '$', '#', ' ', '#', '#', '#'},
             {'#', ' ', '$', ' ', '#', ' ', '#', '.', '#'},
             {'#', '#', '#', ' ', '#', '#', '#', '.', '#'},
             {'#', '#', '#', ' ', ' ', ' ', ' ', '.', '#'},
             {'#', '#', ' ', ' ', ' ', '#', ' ', ' ', '#'},
             {'#', '#', ' ', ' ', ' ', '#', '#', '#', '#'},
-            {'#', '#', '#', '#', '#', '#'},
+            {'#', '#', '#', '#', '#', '#', '#', '#', '#'},
       },
       {
-          {'#', '#', '#', '#', '#', '#', '#', '#'},
+          {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
           {'#', '#', ' ', ' ', ' ', ' ', ' ', '#', '#', '#'},
           {'#', '#', '$', '#', '#', '#', ' ', ' ', ' ', '#'},
           {'#', ' ', 'V', ' ', '$', ' ', ' ', '$', ' ', '#'},
           {'#', ' ', '.', '.', '#', ' ', '$', ' ', '#', '#'},
-          {'#', '#', '.', '.', '#', ' ', ' ', ' ', '#'},
-          {'#', '#', '#', '#', '#', '#', '#', '#', '#'},
+          {'#', '#', '.', '.', '#', ' ', ' ', ' ', '#', '#'},
+          {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
       }
     }
 
@@ -64,42 +67,64 @@ function loadLevel()
           end
       end
   end
+
+  local height = table.getn(level)*64
+  local width = table.getn(level[1])*64
+
+  camera:lookAt(width/2,height/2)
+
+  if height > 600 then
+    camera:zoom(600/height)
+  elseif height < 600 and width > 800 then
+    camera:zoom(800/width)
+  else
+    camera:zoom(1)
+  end
 end
 
 function love.draw()
+  camera:attach()
+
   for y, row in ipairs(level) do
       for x, cell in ipairs(row) do
+          local screenX = (x - 1)*64
+          local screenY = (y - 1)*64
+
           if cell == '.' or cell[2] == '.' then
-            love.graphics.draw(storage, x*64, y*64)
+            love.graphics.draw(storage, screenX, screenY)
           else
-            love.graphics.draw(ground, x*64, y*64)
+            love.graphics.draw(ground, screenX, screenY)
           end
 
           if cell == '#' then
-            love.graphics.draw(wall, x*64, y*64)
+            love.graphics.draw(wall, screenX, screenY)
           end
 
           if cell[1] == 'V' then
-            love.graphics.draw(playerDown, x*64, y*64)
+            love.graphics.draw(playerDown, screenX, screenY)
           end
 
           if cell[1] == '^' then
-            love.graphics.draw(playerUp, x*64, y*64)
+            love.graphics.draw(playerUp, screenX, screenY)
           end
 
           if cell[1] == '>' then
-            love.graphics.draw(playerRight, x*64, y*64)
+            love.graphics.draw(playerRight, screenX, screenY)
           end
 
           if cell[1] == '<' then
-            love.graphics.draw(playerLeft, x*64, y*64)
+            love.graphics.draw(playerLeft, screenX, screenY)
           end
 
           if cell[1] == '$' then
-            love.graphics.draw(box, x*64, y*64)
+            love.graphics.draw(box, screenX, screenY)
           end
       end
   end
+
+  camera:detach()
+
+  love.graphics.print(camera:position(), 10, 10)
 end
 
 function love.keypressed(key)

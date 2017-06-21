@@ -21,8 +21,6 @@ function love.load()
     }
   }
 
-  player = animations.player.down
-
   box = love.graphics.newQuad(6*64, 0, 64, 64, image:getDimensions())
   storage = love.graphics.newQuad(11*64, 7*64, 64, 64, image:getDimensions())
   wall = love.graphics.newQuad(6*64, 7*64, 64, 64, image:getDimensions())
@@ -68,16 +66,22 @@ end
 
 function loadLevel()
   level = {}
-  playerPosition = {moving = false}
-  currentBox = {moving = false}
+  player = {
+    animation = animations.player.down,
+    position = {},
+    moving = false
+  }
+  currentBox = {
+    moving = false
+  }
 
   for y, row in ipairs(levels[currentLevel]) do
     level[y] = {}
     for x, cell in ipairs(row) do
       level[y][x] = cell
       if cell == '@' then
-        playerPosition.x = x
-        playerPosition.y = y
+        player.position.x = x
+        player.position.y = y
       end
     end
   end
@@ -97,7 +101,7 @@ function loadLevel()
 end
 
 function love.update(dt)
-  player:update(dt)
+  player.animation:update(dt)
   Timer.update(dt)
 end
 
@@ -125,9 +129,9 @@ function love.draw()
     end
   end
 
-  player:draw(image, (playerPosition.x - 1)*64, (playerPosition.y - 1)*64)
+  player.animation:draw(image, (player.position.x - 1)*64, (player.position.y - 1)*64)
 
-  if currentBox.x and currentBox.y then
+  if currentBox.moving then
     love.graphics.draw(image, box, (currentBox.x - 1)*64, (currentBox.y - 1)*64)
   end
 
@@ -137,7 +141,7 @@ function love.draw()
 end
 
 function love.keypressed(key)
-  if (key == 'left' or key == 'right' or key == 'up' or key == 'down') and not playerPosition.moving then
+  if (key == 'left' or key == 'right' or key == 'up' or key == 'down') and not player.moving then
     local dx = 0
     local dy = 0
     if key == 'left' then
@@ -150,48 +154,48 @@ function love.keypressed(key)
       dy = 1
     end
 
-    local current = level[playerPosition.y][playerPosition.x]
-    local destination = level[playerPosition.y+dy][playerPosition.x+dx]
+    local current = level[player.position.y][player.position.x]
+    local destination = level[player.position.y+dy][player.position.x+dx]
     local beyond
-    if level[playerPosition.y+2*dy] then
-      beyond = level[playerPosition.y+2*dy][playerPosition.x+2*dx]
+    if level[player.position.y+2*dy] then
+      beyond = level[player.position.y+2*dy][player.position.x+2*dx]
     end
 
     if destination == ' ' or destination == '.' then
       updatePlayerOrientation(dx, dy)
-      level[playerPosition.y][playerPosition.x] = behindCell(current)
+      level[player.position.y][player.position.x] = behindCell(current)
 
-      playerPosition.moving = true
-      Timer.tween(0.2, playerPosition, {x = playerPosition.x+dx, y = playerPosition.y+dy}, 'linear', function()
-        level[playerPosition.y][playerPosition.x] = '@'..destination
-        playerPosition.moving = false
+      player.moving = true
+      Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
+        level[player.position.y][player.position.x] = '@'..destination
+        player.moving = false
         checkCompletedLevel()
       end)
 
     elseif destination[1] == '$' and (beyond == '.' or beyond == ' ') then
       updatePlayerOrientation(dx, dy)
-      currentBox = {x = playerPosition.x+dx, y = playerPosition.y+dy, moving = true}
-      level[playerPosition.y][playerPosition.x] = behindCell(current)
-      level[playerPosition.y+dy][playerPosition.x+dx] = '@'..destination[2]
+      currentBox = {x = player.position.x+dx, y = player.position.y+dy, moving = true}
+      level[player.position.y][player.position.x] = behindCell(current)
+      level[player.position.y+dy][player.position.x+dx] = '@'..destination[2]
 
-      Timer.tween(0.2, currentBox, {x = playerPosition.x+2*dx, y = playerPosition.y+2*dy}, 'linear', function()
+      Timer.tween(0.2, currentBox, {x = player.position.x+2*dx, y = player.position.y+2*dy}, 'linear', function()
         level[currentBox.y][currentBox.x] = '$'..beyond
-        currentBox = {moving = false}
+        currentBox.moving = false
       end)
 
-      playerPosition.moving = true
-      Timer.tween(0.2, playerPosition, {x = playerPosition.x+dx, y = playerPosition.y+dy}, 'linear', function()
-        level[playerPosition.y][playerPosition.x] = '@'..destination
-        playerPosition.moving = false
+      player.moving = true
+      Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
+        level[player.position.y][player.position.x] = '@'..destination[2]
+        player.moving = false
         checkCompletedLevel()
       end)
 
     end
 
-  elseif key == 'r' then
+  elseif key == 'r' and not player.moving then
     loadLevel()
 
-  elseif key == 'n' then
+  elseif key == 'n' and not player.moving then
     currentLevel = currentLevel + 1
     loadLevel()
 
@@ -200,20 +204,20 @@ end
 
 function updatePlayerOrientation(dx, dy)
   if dx > 0 then
-    player = animations.player.right
+    player.animation = animations.player.right
   elseif dx < 0 then
-    player = animations.player.left
+    player.animation = animations.player.left
   else
     if dy > 0 then
-      player = animations.player.down
+      player.animation = animations.player.down
     else
-      player = animations.player.up
+      player.animation = animations.player.up
     end
   end
 end
 
-function behindCell(player)
-  if player[2] == '.' then
+function behindCell(p)
+  if p[2] == '.' then
     return '.'
   else
     return ' '
@@ -226,10 +230,6 @@ function checkCompletedLevel()
     for testX, cell in ipairs(row) do
       if cell[1] == '$' and cell[2] ~= '.' then
         completed = false
-        break
-      end
-      if completed == false then
-        break
       end
     end
   end

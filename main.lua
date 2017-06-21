@@ -12,12 +12,16 @@ function love.load()
   image = love.graphics.newImage('graphics/tilesheet.png')
 
   local g = anim8.newGrid(64, 64, image:getWidth(), image:getHeight(), 0, 5*64, 0)
-  player_up = anim8.newAnimation(g(5,1, 6,1), 0.4)
-  player_down = anim8.newAnimation(g(2,1, 3,1), 0.4)
-  player_right = anim8.newAnimation(g(1,3, 2,3), 0.4)
-  player_left = anim8.newAnimation(g(4,3, 5,3), 0.4)
+  animations = {
+    player = {
+      up = anim8.newAnimation(g(5,1, 6,1), 0.4),
+      down = anim8.newAnimation(g(2,1, 3,1), 0.4),
+      right = anim8.newAnimation(g(1,3, 2,3), 0.4),
+      left = anim8.newAnimation(g(4,3, 5,3), 0.4),
+    }
+  }
 
-  player = player_down
+  player = animations.player.down
 
   box = love.graphics.newQuad(6*64, 0, 64, 64, image:getDimensions())
   storage = love.graphics.newQuad(11*64, 7*64, 64, 64, image:getDimensions())
@@ -196,14 +200,14 @@ end
 
 function updatePlayerOrientation(dx, dy)
   if dx > 0 then
-    player = player_right
+    player = animations.player.right
   elseif dx < 0 then
-    player = player_left
+    player = animations.player.left
   else
     if dy > 0 then
-      player = player_down
+      player = animations.player.down
     else
-      player = player_up
+      player = animations.player.up
     end
   end
 end

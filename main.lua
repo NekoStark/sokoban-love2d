@@ -3,7 +3,6 @@ anim8 = require 'lib/anim8'
 Timer = require 'lib/timer'
 
 function love.load()
-  getmetatable('').__index = function(str,i) return string.sub(str,i,i) end
   love.window.setMode(800, 600, {resizable=false})
   love.graphics.setBackgroundColor(118, 140, 142)
 
@@ -113,7 +112,7 @@ function love.draw()
       local screenX = (x - 1)*64
       local screenY = (y - 1)*64
 
-      if cell == '.' or cell[2] == '.' then
+      if cell == '.' or substr(cell, 2) == '.' then
         love.graphics.draw(image, storage, screenX, screenY)
       else
         love.graphics.draw(image, ground, screenX, screenY)
@@ -123,7 +122,7 @@ function love.draw()
         love.graphics.draw(image, wall, screenX, screenY)
       end
 
-      if cell[1] == '$' then
+      if substr(cell, 1) == '$' then
         love.graphics.draw(image, box, screenX, screenY)
       end
     end
@@ -169,24 +168,24 @@ function love.keypressed(key)
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..destination
         player.moving = false
-        checkCompletedLevel()
       end)
 
-    elseif destination[1] == '$' and (beyond == '.' or beyond == ' ') then
+    elseif substr(destination, 1) == '$' and (beyond == '.' or beyond == ' ') then
       updatePlayerOrientation(dx, dy)
-      currentBox = {x = player.position.x+dx, y = player.position.y+dy, moving = true}
+      currentBox = {x = player.position.x+dx, y = player.position.y+dy}
       level[player.position.y][player.position.x] = behindCell(current)
-      level[player.position.y+dy][player.position.x+dx] = '@'..destination[2]
-
-      Timer.tween(0.2, currentBox, {x = player.position.x+2*dx, y = player.position.y+2*dy}, 'linear', function()
-        level[currentBox.y][currentBox.x] = '$'..beyond
-        currentBox.moving = false
-      end)
+      level[player.position.y+dy][player.position.x+dx] = '@'..substr(destination, 2)
 
       player.moving = true
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
-        level[player.position.y][player.position.x] = '@'..destination[2]
+        level[player.position.y][player.position.x] = '@'..substr(destination, 2)
         player.moving = false
+      end)
+
+      currentBox.moving = true
+      Timer.tween(0.2, currentBox, {x = player.position.x+2*dx, y = player.position.y+2*dy}, 'linear', function()
+        level[currentBox.y][currentBox.x] = '$'..beyond
+        currentBox.moving = false
         checkCompletedLevel()
       end)
 
@@ -217,7 +216,7 @@ function updatePlayerOrientation(dx, dy)
 end
 
 function behindCell(p)
-  if p[2] == '.' then
+  if substr(p, 2) == '.' then
     return '.'
   else
     return ' '
@@ -228,7 +227,7 @@ function checkCompletedLevel()
   local completed = true
   for testY, row in ipairs(level) do
     for testX, cell in ipairs(row) do
-      if cell[1] == '$' and cell[2] ~= '.' then
+      if substr(cell, 1) == '$' and substr(cell, 2) ~= '.' then
         completed = false
       end
     end
@@ -242,4 +241,8 @@ function checkCompletedLevel()
       loadLevel()
     end
   end
+end
+
+function substr(str,i)
+  return string.sub(str,i,i)
 end

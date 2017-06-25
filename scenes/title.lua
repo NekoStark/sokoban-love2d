@@ -3,7 +3,11 @@ Signal = require 'lib/signal'
 local Title = {}
 
 function Title:draw()
-    love.graphics.print("Press Enter to continue", 10, 10)
+    local line = "Press Enter to start"
+    local width, height = love.window.getMode()
+    local Font = love.graphics.getFont()
+    local offset = Font:getWidth(line)/2
+    love.graphics.print(line, width/2 - offset, height/2)
 end
 
 function Title:keyreleased(key, code)

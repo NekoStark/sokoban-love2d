@@ -1,6 +1,7 @@
 Camera = require 'lib/camera'
 anim8 = require 'lib/anim8'
 Timer = require 'lib/timer'
+Signal = require 'lib/signal'
 
 local Game = {}
 
@@ -77,16 +78,20 @@ function checkCompletedLevel()
   end
 
   if completed then
-    currentLevel = currentLevel + 1
-    if currentLevel > table.getn(levels) then
-      love.event.quit( "restart" )
-    else
-      loadLevel()
-    end
+    Signal.emit('completed')
   end
 end
 
-function Game:load()
+function Game:next()
+  currentLevel = currentLevel + 1
+  if currentLevel > table.getn(levels) then
+    love.event.quit( "restart" )
+  else
+    loadLevel()
+  end
+end
+
+function Game:enter()
   camera = Camera.new(0, 0)
 
   image = love.graphics.newImage('graphics/tilesheet.png')
@@ -102,6 +107,7 @@ function Game:load()
   }
 
   box = love.graphics.newQuad(6*64, 0, 64, 64, image:getDimensions())
+  boxPlaced = love.graphics.newQuad(6*64, 1*64, 64, 64, image:getDimensions())
   storage = love.graphics.newQuad(11*64, 7*64, 64, 64, image:getDimensions())
   wall = love.graphics.newQuad(6*64, 7*64, 64, 64, image:getDimensions())
   ground = love.graphics.newQuad(11*64, 6*64, 64, 64, image:getDimensions())
@@ -168,8 +174,13 @@ function Game:draw()
       end
 
       if substr(cell, 1) == '$' then
-        love.graphics.draw(image, box, screenX, screenY)
+        if substr(cell, 2) == '.' then
+          love.graphics.draw(image, boxPlaced, screenX, screenY)
+        else
+          love.graphics.draw(image, box, screenX, screenY)
+        end
       end
+
     end
   end
 

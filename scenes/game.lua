@@ -3,6 +3,9 @@ anim8 = require 'lib/anim8'
 Timer = require 'lib/timer'
 Signal = require 'lib/signal'
 
+World1 = require 'levels/world-1'
+World2 = require 'levels/world-2'
+
 local Game = {}
 
 function substr(str,i)
@@ -10,6 +13,7 @@ function substr(str,i)
 end
 
 local function loadLevel()
+  -- FIXME controllare se queste variabili sono locali per questo modulo, altrimenti farle diventare (?)
   level = {}
   player = {
     animation = animations.player.down,
@@ -20,7 +24,7 @@ local function loadLevel()
     moving = false
   }
 
-  for y, row in ipairs(levels[currentLevel]) do
+  for y, row in ipairs(worlds[currentWorld][currentLevel]) do
     level[y] = {}
     for x, cell in ipairs(row) do
       level[y][x] = cell
@@ -84,8 +88,16 @@ end
 
 function Game:next()
   currentLevel = currentLevel + 1
-  if currentLevel > table.getn(levels) then
-    love.event.quit( "restart" )
+  if currentLevel > table.getn(worlds[currentWorld]) then
+    currentWorld = currentWorld + 1
+    if currentWorld > table.getn(worlds) then
+      love.event.quit( "restart" )
+    else
+      currentLevel = 1
+      worlds[currentWorld]:init()
+      box, boxPlaced, storage, wall, ground = worlds[currentWorld]:loadAssets(image)
+      loadLevel()
+    end
   else
     loadLevel()
   end
@@ -106,47 +118,13 @@ function Game:enter()
     }
   }
 
-  box = love.graphics.newQuad(6*64, 0, 64, 64, image:getDimensions())
-  boxPlaced = love.graphics.newQuad(6*64, 1*64, 64, 64, image:getDimensions())
-  storage = love.graphics.newQuad(11*64, 7*64, 64, 64, image:getDimensions())
-  wall = love.graphics.newQuad(6*64, 7*64, 64, 64, image:getDimensions())
-  ground = love.graphics.newQuad(11*64, 6*64, 64, 64, image:getDimensions())
-
+  currentWorld = 1
   currentLevel = 1
 
-  levels = {
-    {
-      {'#', '#', '#', '#', '#', '#', '#', '#'},
-      {'#', '#', '#', '.', '#', '#', '#', '#'},
-      {'#', '#', '#', ' ', '#', '#', '#', '#'},
-      {'#', '#', '#', '$', ' ', '$', '.', '#'},
-      {'#', '.', ' ', '$', '@', '#', '#', '#'},
-      {'#', '#', '#', '#', '$', '#', '#', '#'},
-      {'#', '#', '#', '#', '.', '#', '#', '#'},
-      {'#', '#', '#', '#', '#', '#', '#', '#'},
-    },
-    {
-      {'#', '#', '#', '#', '#', '#', '#', '#', '#'},
-      {'#', ' ', ' ', ' ', '#', '#', '#', '#', '#'},
-      {'#', '@', '$', '$', '#', ' ', '#', '#', '#'},
-      {'#', ' ', '$', ' ', '#', ' ', '#', '.', '#'},
-      {'#', '#', '#', ' ', '#', '#', '#', '.', '#'},
-      {'#', '#', '#', ' ', ' ', ' ', ' ', '.', '#'},
-      {'#', '#', ' ', ' ', ' ', '#', ' ', ' ', '#'},
-      {'#', '#', ' ', ' ', ' ', '#', '#', '#', '#'},
-      {'#', '#', '#', '#', '#', '#', '#', '#', '#'},
-    },
-    {
-      {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
-      {'#', '#', ' ', ' ', ' ', ' ', ' ', '#', '#', '#'},
-      {'#', '#', '$', '#', '#', '#', ' ', ' ', ' ', '#'},
-      {'#', ' ', '@', ' ', '$', ' ', ' ', '$', ' ', '#'},
-      {'#', ' ', '.', '.', '#', ' ', '$', ' ', '#', '#'},
-      {'#', '#', '.', '.', '#', ' ', ' ', ' ', '#', '#'},
-      {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
-    }
-  }
+  worlds = { World1, World2 }
 
+  worlds[currentWorld]:init()
+  box, boxPlaced, storage, wall, ground = worlds[currentWorld]:loadAssets(image)
   loadLevel()
 end
 
@@ -251,8 +229,7 @@ function Game:keypressed(key)
     loadLevel()
 
   elseif key == 'n' and not player.moving then
-    currentLevel = currentLevel + 1
-    loadLevel()
+    Game:next()
 
   end
 end

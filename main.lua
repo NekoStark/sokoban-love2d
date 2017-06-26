@@ -7,7 +7,6 @@ Complete = require 'scenes/complete'
 
 function love.load()
   love.window.setMode(800, 600, {resizable=false})
-  love.graphics.setBackgroundColor(118, 140, 142)
 
   Signal.register('start', function()
     Gamestate.switch(Game)

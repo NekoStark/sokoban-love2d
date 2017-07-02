@@ -86,6 +86,7 @@ function checkCompletedLevel()
 end
 
 function Game:next()
+  moves = 0
   currentLevel = currentLevel + 1
   if currentLevel > table.getn(worlds[currentWorld]) then
     currentWorld = currentWorld + 1
@@ -119,6 +120,7 @@ function Game:enter()
 
   currentWorld = 1
   currentLevel = 1
+  moves = 0
 
   worlds = { World1, World2 }
 
@@ -169,8 +171,8 @@ function Game:draw()
 
   camera:detach()
 
-  local levelInfo = 'W'..currentWorld..'-L'..currentLevel
-  love.graphics.print(levelInfo, 10, 10)
+  love.graphics.print('W'..currentWorld..'-L'..currentLevel, 10, 10)
+  love.graphics.print('Move Count: '..moves, 10, 25)
 end
 
 function Game:keypressed(key)
@@ -202,6 +204,7 @@ function Game:keypressed(key)
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..destination
         player.moving = false
+        moves = moves + 1
       end)
 
     elseif substr(destination, 1) == '$' and (beyond == '.' or beyond == ' ') then
@@ -214,6 +217,7 @@ function Game:keypressed(key)
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..substr(destination, 2)
         player.moving = false
+        moves = moves + 1
       end)
 
       currentBox.moving = true

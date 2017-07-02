@@ -13,6 +13,8 @@ function substr(str,i)
 end
 
 local function loadLevel()
+  moveCount = 0
+  moves = {}
   level = {}
   player = {
     animation = animations.player.down,
@@ -86,7 +88,6 @@ function checkCompletedLevel()
 end
 
 function Game:next()
-  moves = 0
   currentLevel = currentLevel + 1
   if currentLevel > table.getn(worlds[currentWorld]) then
     currentWorld = currentWorld + 1
@@ -120,7 +121,6 @@ function Game:enter()
 
   currentWorld = 1
   currentLevel = 1
-  moves = 0
 
   worlds = { World1, World2 }
 
@@ -172,7 +172,7 @@ function Game:draw()
   camera:detach()
 
   love.graphics.print('W'..currentWorld..'-L'..currentLevel, 10, 10)
-  love.graphics.print('Move Count: '..moves, 10, 25)
+  love.graphics.print('Move Count: '..moveCount, 10, 25)
 end
 
 function Game:keypressed(key)
@@ -204,7 +204,14 @@ function Game:keypressed(key)
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..destination
         player.moving = false
-        moves = moves + 1
+        moveCount = moveCount + 1
+        table.insert(moves, {
+            move = {
+              dx = dx,
+              dy = dy
+            },
+            box = false
+        })
       end)
 
     elseif substr(destination, 1) == '$' and (beyond == '.' or beyond == ' ') then
@@ -217,7 +224,14 @@ function Game:keypressed(key)
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..substr(destination, 2)
         player.moving = false
-        moves = moves + 1
+        moveCount = moveCount + 1
+        table.insert(moves, {
+            move = {
+              dx = dx,
+              dy = dy
+            },
+            box = true
+        })
       end)
 
       currentBox.moving = true
@@ -234,6 +248,23 @@ function Game:keypressed(key)
 
   elseif key == 'n' and not player.moving then
     Game:next()
+
+  elseif key == 'z' and table.getn(moves) ~= 0 then
+    local idx = table.getn(moves)
+    local last = table.remove(moves, idx)
+    -- first reverts the player position
+    level[player.position.y][player.position.x] = behindCell(level[player.position.y][player.position.x])
+    player.position = {
+      x = player.position.x - last.move.dx,
+      y = player.position.y - last.move.dy
+    }
+    level[player.position.y][player.position.x] = '@'
+
+    -- then reverts a box, if it was moved
+    if last.box then
+      level[player.position.y + 2*last.move.dy][player.position.x + 2*last.move.dx] = behindCell(level[player.position.y + 2*last.move.dy][player.position.x + 2*last.move.dx])
+      level[player.position.y + last.move.dy][player.position.x + last.move.dx] = '$'
+    end
 
   end
 end

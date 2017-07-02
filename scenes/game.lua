@@ -13,7 +13,6 @@ function substr(str,i)
 end
 
 local function loadLevel()
-  -- FIXME controllare se queste variabili sono locali per questo modulo, altrimenti farle diventare (?)
   level = {}
   player = {
     animation = animations.player.down,
@@ -170,7 +169,8 @@ function Game:draw()
 
   camera:detach()
 
-  love.graphics.print(camera:position(), 10, 10)
+  local levelInfo = 'W'..currentWorld..'-L'..currentLevel
+  love.graphics.print(levelInfo, 10, 10)
 end
 
 function Game:keypressed(key)

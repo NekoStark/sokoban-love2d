@@ -105,6 +105,9 @@ function Game:next()
 end
 
 function Game:enter()
+  local music = love.audio.newSource("music/game.mp3")
+  music:play()
+
   camera = Camera.new(0, 0)
 
   image = love.graphics.newImage('graphics/tilesheet.png')

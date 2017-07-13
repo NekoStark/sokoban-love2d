@@ -2,6 +2,11 @@ Signal = require 'lib/signal'
 
 local Title = {}
 
+function Title:enter(from)
+  music = love.audio.newSource("audio/music/title.mp3")
+  music:play()
+end
+
 function Title:draw()
     local line = "Press Enter to start"
     local width, height = love.window.getMode()
@@ -12,6 +17,7 @@ end
 
 function Title:keyreleased(key, code)
     if key == 'return' then
+        music:stop()
         Signal.emit('start')
     end
 end

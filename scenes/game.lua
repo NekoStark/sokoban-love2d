@@ -105,6 +105,14 @@ function Game:next()
 end
 
 function Game:enter()
+  music = love.audio.newSource("audio/music/game.mp3")
+  moveSound = love.audio.newSource("audio/sound/move.ogg", "static")
+  moveSound:setVolume(0.8)
+  placeSound = love.audio.newSource("audio/sound/place.ogg", "static")
+  boxSound = love.audio.newSource("audio/sound/box.ogg", "static")
+  boxSound:setVolume(1.2)
+  music:play()
+
   camera = Camera.new(0, 0)
 
   image = love.graphics.newImage('graphics/tilesheet.png')
@@ -201,6 +209,7 @@ function Game:keypressed(key)
       level[player.position.y][player.position.x] = behindCell(current)
 
       player.moving = true
+      moveSound:play()
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..destination
         player.moving = false
@@ -221,6 +230,7 @@ function Game:keypressed(key)
       level[player.position.y+dy][player.position.x+dx] = '@'..substr(destination, 2)
 
       player.moving = true
+      moveSound:play()
       Timer.tween(0.2, player.position, {x = player.position.x+dx, y = player.position.y+dy}, 'linear', function()
         level[player.position.y][player.position.x] = '@'..substr(destination, 2)
         player.moving = false
@@ -234,9 +244,13 @@ function Game:keypressed(key)
         })
       end)
 
+      boxSound:play()
       currentBox.moving = true
       Timer.tween(0.2, currentBox, {x = player.position.x+2*dx, y = player.position.y+2*dy}, 'linear', function()
         level[currentBox.y][currentBox.x] = '$'..beyond
+        if beyond == '.' then
+          placeSound:play()
+        end
         currentBox.moving = false
         checkCompletedLevel()
       end)

@@ -3,7 +3,7 @@ Signal = require 'lib/signal'
 local Title = {}
 
 function Title:enter(from)
-  music = love.audio.newSource("music/title.mp3")
+  music = love.audio.newSource("audio/music/title.mp3")
   music:play()
 end
 

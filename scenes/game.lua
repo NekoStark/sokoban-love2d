@@ -105,7 +105,7 @@ function Game:next()
 end
 
 function Game:enter()
-  music = love.audio.newSource("audio/music/game.mp3")
+  music = love.audio.newSource("audio/music/game.mp3", "static")
   moveSound = love.audio.newSource("audio/sound/move.ogg", "static")
   moveSound:setVolume(0.8)
   placeSound = love.audio.newSource("audio/sound/place.ogg", "static")

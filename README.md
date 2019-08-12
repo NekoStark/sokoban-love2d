@@ -1,4 +1,4 @@
-#Sokoban Demo (with LÖVE)
+# Sokoban Demo (with LÖVE)
 
 A simple sokoban game made with LÖVE a few years back.
 
